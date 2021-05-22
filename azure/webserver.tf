@@ -101,3 +101,35 @@ resource "azurerm_bastion_host" "azurebastion" {
     public_ip_address_id = azurerm_public_ip.bastionpip.id
   }
 }
+
+resource "azurerm_linux_virtual_machine_scale_set" "webserverss" {
+  name = "webserver-vmss"
+  resource_group_name = azurerm_resource_group.rg.name
+  location = "japaneast"
+  sku = "Standard_B2ms"
+  instances = 2
+  admin_username = "azureuser"
+
+  admin_ssh_key {
+    username = "azureuser"
+    public_key = tls_private_key.webserverssh.public_key_openssh
+  }
+
+  os_disk {
+    caching = "ReadWrite"
+    storage_account_type = "Standard_LRS"
+  }
+
+  source_image_id = data.azurerm_image.webserverimage.id
+
+  network_interface {
+    name = "webservernic"
+    primary = true
+
+    ip_configuration {
+      name      = "nicconfiguration"
+      primary   = true
+      subnet_id = azurerm_subnet.frontendsubnet.id
+    }
+  }
+}
