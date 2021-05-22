@@ -1,22 +1,3 @@
-resource "azurerm_resource_group" "rg" {
-  name = "terraformrg"
-  location = "japaneast"
-}
-
-resource "azurerm_virtual_network" "webvirtualnetwork" {
-  name = "webvirtualnetwork"
-  address_space = ["10.0.0.0/16"]
-  location = "japaneast"
-  resource_group_name = azurerm_resource_group.rg.name
-}
-
-resource "azurerm_subnet" "frontendsubnet" {
-  name = "frontendsubnet"
-  resource_group_name = azurerm_resource_group.rg.name
-  virtual_network_name = azurerm_virtual_network.webvirtualnetwork.name
-  address_prefixes = [ "10.0.0.0/24" ]
-}
-
 resource "azurerm_public_ip" "webserverpip" {
   name = "webserverpip"
   location = "japaneast"
@@ -59,7 +40,6 @@ resource "azurerm_network_interface_security_group_association" "webservernicass
   network_interface_id = azurerm_network_interface.webservernic.id
   network_security_group_id = azurerm_network_security_group.webservernsg.id
 }
-
 resource "tls_private_key" "webserverssh" {
   algorithm = "RSA"
   rsa_bits = 4096
@@ -68,6 +48,11 @@ resource "tls_private_key" "webserverssh" {
 output "tls_private_key" {
   value = tls_private_key.webserverssh.private_key_pem
   sensitive = true
+}
+
+data "azurerm_image" "webserverimage" {
+  resource_group_name = "imagesourcerg"
+  name = "webserverimagesource-image-20210522182910"
 }
 
 resource "azurerm_linux_virtual_machine" "webserver" {
@@ -85,12 +70,7 @@ resource "azurerm_linux_virtual_machine" "webserver" {
     storage_account_type = "Standard_LRS"
   }
 
-  source_image_reference {
-    publisher = "Canonical"
-    offer     = "UbuntuServer"
-    sku       = "18.04-LTS"
-    version   = "latest"
-  }
+  source_image_id = data.azurerm_image.webserverimage.id
 
   computer_name = "webserver"
   admin_username = "azureuser"
@@ -100,13 +80,6 @@ resource "azurerm_linux_virtual_machine" "webserver" {
     username = "azureuser"
     public_key = tls_private_key.webserverssh.public_key_openssh
   }
-}
-
-resource "azurerm_subnet" "bastionsubnet" {
-  name = "AzureBastionSubnet"
-  resource_group_name = azurerm_resource_group.rg.name
-  virtual_network_name = azurerm_virtual_network.webvirtualnetwork.name
-  address_prefixes = [ "10.0.1.0/24" ]
 }
 
 resource "azurerm_public_ip" "bastionpip" {
