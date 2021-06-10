@@ -1,3 +1,0 @@
-loganalytics solutionをidで作る
-azurerm_log_analytics_solutionを含めずにvmssをデプロイ後、手動で分析情報を有効化
-その後リソースを削除してazurerm_log_analytics_solutionを含めてリソースをデプロイすると、azurerm_log_analytics_solutionが参照するloganalytics workspaceが古いまま？

@@ -1,7 +1,0 @@
-DependencyAgentLinux
-Microsoft.Azure.Monitoring.DependencyAgent.DependencyAgentLinux
-9.10.9.15340
-
-OMSAgentForLinux
-Microsoft.EnterpriseCloud.Monitoring.OmsAgentForLinux
-1.13.35
