@@ -21,17 +21,17 @@ resource "azurerm_public_ip" "bastionpip" {
   sku = "Standard"
 }
 
-resource "azurerm_bastion_host" "azurebastion" {
-  name = "azurebastion"
-  location = "japaneast"
-  resource_group_name = azurerm_resource_group.rg.name
+# resource "azurerm_bastion_host" "azurebastion" {
+#   name = "azurebastion"
+#   location = "japaneast"
+#   resource_group_name = azurerm_resource_group.rg.name
 
-  ip_configuration {
-    name = "bastionconfiguration"
-    subnet_id = azurerm_subnet.bastionsubnet.id
-    public_ip_address_id = azurerm_public_ip.bastionpip.id
-  }
-}
+#   ip_configuration {
+#     name = "bastionconfiguration"
+#     subnet_id = azurerm_subnet.bastionsubnet.id
+#     public_ip_address_id = azurerm_public_ip.bastionpip.id
+#   }
+# }
 
 resource "azurerm_linux_virtual_machine_scale_set" "webserverss" {
   name = "webserver-vmss"
@@ -40,6 +40,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "webserverss" {
   sku = "Standard_B2ms"
   instances = 2
   admin_username = "azureuser"
+  upgrade_mode = "Automatic"
 
   admin_ssh_key {
     username = "azureuser"
@@ -61,7 +62,35 @@ resource "azurerm_linux_virtual_machine_scale_set" "webserverss" {
       name      = "nicconfiguration"
       primary   = true
       subnet_id = azurerm_subnet.backendsubnet.id
-      application_gateway_backend_address_pool_ids = azurerm_application_gateway.webserverag.backend_address_pool[*].id
+      # application_gateway_backend_address_pool_ids = azurerm_application_gateway.webserverag.backend_address_pool[*].id
     }
   }
+}
+
+resource "azurerm_virtual_machine_scale_set_extension" "DependencyAgentLinux" {
+  name = "DependencyAgentLinux"
+  virtual_machine_scale_set_id = azurerm_linux_virtual_machine_scale_set.webserverss.id
+  publisher = "Microsoft.Azure.Monitoring.DependencyAgent"
+  type = "DependencyAgentLinux"
+  type_handler_version = "9.10"
+}
+
+resource "azurerm_virtual_machine_scale_set_extension" "OMSAgentForLinux" {
+  name = "OMSAgentForLinux"
+  virtual_machine_scale_set_id = azurerm_linux_virtual_machine_scale_set.webserverss.id
+  publisher = "Microsoft.EnterpriseCloud.Monitoring"
+  type = "OMSAgentForLinux"
+  type_handler_version = "1.13"
+
+  settings = <<SETTINGS
+    {
+      "workspaceId": "${azurerm_log_analytics_workspace.webserverlogana.workspace_id}"
+    }
+  SETTINGS
+
+  protected_settings = <<PROTECTED_SETTINGS
+    {
+      "workspaceKey": "${azurerm_log_analytics_workspace.webserverlogana.primary_shared_key}"
+    }
+  PROTECTED_SETTINGS
 }
