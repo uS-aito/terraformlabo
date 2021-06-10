@@ -7,6 +7,11 @@ data "terraform_remote_state" "vnet" {
     container_name = "tfstate"
     key = "tfstatereflabo01.tfstate"
   }
+  # backend = "local"
+
+  # config = {
+  #   path = "../env1/tfstatereflabo01.tfstate"
+  # }
 }
 
 resource "azurerm_network_interface" "samplenic" {

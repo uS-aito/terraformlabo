@@ -11,6 +11,9 @@ terraform {
     container_name = "tfstate"
     key = "tfstatereflabo01.tfstate"
   }
+  # backend "local" {
+  #   path = "tfstatereflabo01.tfstate"
+  # }
 }
 provider "azurerm" {
   features {}
