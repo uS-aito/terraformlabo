@@ -9,7 +9,7 @@ terraform {
     resource_group_name = "tfstatestorageaccountrg"
     storage_account_name = "tfstatestorage0627"
     container_name = "tfstate"
-    key = "moduletestvnet.tfstate"
+    key = "terraform.tfstate"
   }
 }
 provider "azurerm" {
